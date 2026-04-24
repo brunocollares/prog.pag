@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Programação de Pagamento</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #f5f5f7; --surface: #ffffff; --surface2: #fafafa;
+  --border: rgba(0,0,0,0.08); --border-med: rgba(0,0,0,0.12);
+  --text: #1d1d1f; --text-2: #6e6e73; --text-3: #aeaeb2;
+  --blue: #0071e3; --blue-light: #e8f2fd; --blue-mid: #b3d1f7;
+  --green: #25a244; --green-light: #e6f6eb;
+  --amber: #bf5900; --amber-light: #fdf3e7; --amber-mid: #f5c57a;
+  --red: #c7372f; --red-light: #fdecea;
+  --indigo: #3b4cca; --indigo-light: #eceffe;
+  --purple: #7c3aed; --purple-light: #f3effe;
+  --radius: 14px; --radius-sm: 8px; --radius-lg: 20px;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow: 0 4px 16px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.04);
+  --shadow-lg: 0 20px 48px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06);
+  --font: 'DM Sans', sans-serif; --mono: 'DM Mono', monospace;
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+html.dark {
+  --bg: #161618; --surface: #1c1c1e; --surface2: #2c2c2e;
+  --border: rgba(255,255,255,0.08); --border-med: rgba(255,255,255,0.13);
+  --text: #f5f5f7; --text-2: #98989d; --text-3: #636366;
+  --blue: #3b9eff; --blue-light: #0d2a45; --blue-mid: #1a4a75;
+  --green: #30d158; --green-light: #0a2a17;
+  --amber: #ff9f0a; --amber-light: #2d1f00; --amber-mid: #8a5500;
+  --red: #ff453a; --red-light: #2d0e0c;
+  --indigo: #7b8ff5; --indigo-light: #1a1f42;
+  --purple: #a78bfa; --purple-light: #2e1a5e;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3); --shadow: 0 4px 16px rgba(0,0,0,0.4); --shadow-lg: 0 20px 48px rgba(0,0,0,0.6);
+}
+
+html { -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); font-family: var(--font); color: var(--text); min-height: 100vh; transition: background 0.3s, color 0.3s; }
+.page { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+
+/* HEADER */
+header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 36px; gap: 20px; }
+.header-eyebrow { font-size: 12px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--blue); margin-bottom: 6px; }
+h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.2; }
+.header-sub { font-size: 14px; color: var(--text-2); margin-top: 4px; }
+.header-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; padding-top: 4px; }
+.header-date { font-size: 13px; color: var(--text-2); text-align: right; line-height: 1.6; }
+#live-clock { color: var(--text); font-weight: 500; }
+.theme-toggle { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border-med); background: var(--surface); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: var(--shadow-sm); transition: all var(--transition); }
+.theme-toggle:hover { border-color: var(--blue); transform: rotate(15deg); }
+
+/* SECTION CARD */
+.section-card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); box-shadow: var(--shadow-sm); margin-bottom: 16px; overflow: hidden; transition: box-shadow var(--transition); }
+.section-card:hover { box-shadow: var(--shadow); }
+.section-header { display: flex; align-items: center; gap: 10px; padding: 16px 20px 14px; border-bottom: 1px solid var(--border); }
+.section-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+.section-icon.blue { background: var(--blue-light); }
+.section-icon.green { background: var(--green-light); }
+.section-icon.amber { background: var(--amber-light); }
+.section-icon.indigo { background: var(--indigo-light); }
+.section-icon.purple { background: var(--purple-light); }
+.section-title { font-size: 15px; font-weight: 600; }
+.section-sub { font-size: 12px; color: var(--text-2); margin-top: 1px; }
+.section-body { padding: 20px; }
+
+/* COMPANY PILLS */
+.company-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+.company-pill { padding: 8px 16px; border-radius: 50px; border: 1.5px solid var(--border-med); background: var(--surface2); font-family: var(--font); font-size: 13px; font-weight: 500; color: var(--text-2); cursor: pointer; transition: all var(--transition); white-space: nowrap; }
+.company-pill:hover { border-color: var(--blue); color: var(--blue); }
+.company-pill.active { background: var(--blue-light); border-color: var(--blue); color: var(--blue); }
+.company-pill.add-co { border-style: dashed; color: var(--text-3); display: flex; align-items: center; gap: 5px; }
+.company-pill.add-co:hover { border-color: var(--green); color: var(--green); }
+
+/* FORM */
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.span-2 { grid-column: span 2; }
+.form-row { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 12px; font-weight: 500; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.form-input, .form-select, .form-textarea { background: var(--surface2); border: 1.5px solid var(--border-med); border-radius: var(--radius-sm); padding: 10px 12px; font-family: var(--font); font-size: 14px; color: var(--text); outline: none; transition: border-color var(--transition), box-shadow var(--transition); width: 100%; }
+.form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,113,227,0.12); }
+.form-input.mono { font-family: var(--mono); font-size: 13px; }
+.form-select { cursor: pointer; }
+.form-textarea { resize: vertical; min-height: 80px; }
+
+/* TYPE BUTTONS */
+.toggle-group { display: flex; gap: 8px; flex-wrap: wrap; }
+.type-btn { padding: 8px 16px; border-radius: var(--radius-sm); border: 1.5px solid var(--border-med); background: var(--surface2); font-family: var(--font); font-size: 13px; font-weight: 500; color: var(--text-2); cursor: pointer; transition: all var(--transition); }
+.type-btn:hover { border-color: var(--text-3); color: var(--text); }
+.type-btn.active.trabalhista { background: var(--amber-light); border-color: var(--amber); color: var(--amber); }
+.type-btn.active.civel { background: var(--indigo-light); border-color: var(--indigo); color: var(--indigo); }
+.type-btn.active.consumidor { background: var(--green-light); border-color: var(--green); color: var(--green); }
+.type-btn.active.manual { background: var(--purple-light); border-color: var(--purple); color: var(--purple); }
+.type-btn.active.none { background: var(--surface2); border-color: var(--border-med); color: var(--text); }
+
+/* COLLAPSIBLE */
+.proc-section { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); animation: fadeIn 0.22s ease; }
+.proc-section.open { display: block; }
+
+/* VALUE ITEMS */
+.value-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.value-item { background: var(--surface2); border: 1.5px solid var(--border-med); border-radius: var(--radius-sm); padding: 12px 14px; transition: opacity var(--transition), border-color var(--transition); }
+.value-item.isento-on { opacity: 0.4; }
+.vi-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.vi-label { font-size: 11px; font-weight: 700; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; }
+.isento-wrap { display: flex; align-items: center; gap: 5px; cursor: pointer; user-select: none; }
+.isento-cb { width: 14px; height: 14px; accent-color: var(--red); cursor: pointer; }
+.isento-txt { font-size: 11px; font-weight: 600; color: var(--text-3); letter-spacing: 0.03em; }
+.vi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.vi-sub { font-size: 10px; color: var(--text-3); margin-bottom: 3px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+.vi-input { background: var(--surface); border: 1.5px solid var(--border-med); border-radius: 6px; padding: 8px 10px; font-family: var(--mono); font-size: 13px; color: var(--text); outline: none; transition: border-color var(--transition); width: 100%; }
+.vi-input:focus { border-color: var(--blue); }
+.vi-input:disabled { opacity: 0.3; cursor: not-allowed; background: var(--surface2); }
+.vi-input.date-f { font-family: var(--font); }
+
+/* INSTALLMENTS */
+.inst-controls { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end; margin-bottom: 16px; }
+.gen-btn { padding: 10px 20px; border-radius: var(--radius-sm); background: var(--blue); color: #fff; border: none; font-family: var(--font); font-size: 14px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: all var(--transition); box-shadow: 0 2px 8px rgba(0,113,227,0.3); }
+.gen-btn:hover { background: #0062c4; transform: translateY(-1px); }
+
+.inst-wrap { overflow: hidden; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.inst-table { width: 100%; border-collapse: collapse; }
+.inst-table th { background: var(--surface2); padding: 10px 14px; font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.05em; text-align: left; border-bottom: 1px solid var(--border); }
+.inst-table td { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 14px; vertical-align: middle; }
+.inst-table tr:last-child td { border-bottom: none; }
+.inst-table tr:hover td { background: var(--surface2); }
+.td-n { width: 100px; font-family: var(--mono); font-size: 12px; color: var(--text-3); font-weight: 500; }
+
+.inst-input { background: transparent; border: none; outline: none; font-family: var(--font); font-size: 14px; color: var(--text); width: 100%; padding: 2px 0; }
+.inst-input:focus { background: var(--blue-light); border-radius: 4px; padding: 2px 6px; margin: -2px -6px; width: calc(100% + 12px); }
+.inst-input.mono { font-family: var(--mono); font-size: 13px; }
+.date-cell { display: flex; align-items: center; gap: 8px; }
+.hol-badge { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 20px; background: var(--amber-light); color: var(--amber); border: 1px solid var(--amber-mid); white-space: nowrap; text-transform: uppercase; letter-spacing: 0.04em; }
+
+.add-row-btn { margin-top: 10px; padding: 8px 14px; border: 1.5px dashed var(--border-med); border-radius: var(--radius-sm); background: transparent; color: var(--text-3); font-family: var(--font); font-size: 13px; cursor: pointer; width: 100%; text-align: center; transition: all var(--transition); }
+.add-row-btn:hover { border-color: var(--blue); color: var(--blue); }
+
+/* Manual hint */
+.manual-hint { display: flex; gap: 0; padding: 6px 14px 2px; }
+.manual-hint span { font-size: 11px; color: var(--text-3); padding-right: 16px; }
+.manual-hint span::before { content: '·  '; }
+
+/* TOTALS */
+.totals-row { display: flex; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+.total-chip { flex: 1; min-width: 140px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; }
+.total-chip-label { font-size: 11px; color: var(--text-2); font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.total-chip-value { font-size: 18px; font-weight: 600; letter-spacing: -0.02em; font-family: var(--mono); }
+.total-chip-value.blue { color: var(--blue); }
+.total-chip-value.green { color: var(--green); }
+
+/* BANK */
+.bank-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 12px; }
+
+/* SIGNATURE */
+.sign-area { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-top: 4px; }
+.sign-field .sign-line { height: 44px; border-bottom: 1.5px solid var(--border-med); width: 100%; }
+.sign-sub { font-size: 11px; color: var(--text-3); text-align: center; margin-top: 5px; }
+
+/* ACTIONS */
+.actions-bar { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+.btn-primary { display: inline-flex; align-items: center; gap: 7px; background: var(--blue); color: #fff; border: none; border-radius: 50px; padding: 11px 24px; font-family: var(--font); font-size: 14px; font-weight: 500; cursor: pointer; transition: all var(--transition); box-shadow: 0 2px 8px rgba(0,113,227,0.3); }
+.btn-primary:hover { background: #0062c4; transform: translateY(-1px); }
+.btn-secondary { display: inline-flex; align-items: center; gap: 7px; background: var(--surface2); color: var(--text); border: 1.5px solid var(--border-med); border-radius: 50px; padding: 11px 24px; font-family: var(--font); font-size: 14px; font-weight: 500; cursor: pointer; transition: all var(--transition); }
+.btn-secondary:hover { border-color: var(--text-3); }
+
+/* OVERLAY / MODAL */
+.overlay { position: fixed; inset: 0; z-index: 900; background: rgba(0,0,0,0.45); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 20px; }
+.overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+.modal { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); width: 100%; max-width: 420px; border: 1px solid var(--border); overflow: hidden; }
+.modal-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 22px 24px 18px; border-bottom: 1px solid var(--border); }
+.modal-eyebrow { font-size: 11px; font-weight: 600; color: var(--blue); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.modal-title { font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
+.modal-close { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border-med); background: var(--surface2); cursor: pointer; font-size: 14px; color: var(--text-2); display: flex; align-items: center; justify-content: center; transition: all var(--transition); flex-shrink: 0; }
+.modal-close:hover { background: var(--red-light); color: var(--red); border-color: var(--red); }
+.modal-body { padding: 20px 24px 24px; }
+.modal-body .form-row { margin-bottom: 14px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+
+/* PRINT PREVIEW */
+#print-overlay .modal { max-width: 720px; }
+.print-doc { background: #fff; color: #1d1d1f; padding: 36px; font-family: 'DM Sans', sans-serif; border: 1px solid #e0e0e0; border-radius: 8px; }
+.print-doc * { color: #1d1d1f !important; }
+.p-header { text-align: center; border-bottom: 2px solid #1d1d1f; padding-bottom: 14px; margin-bottom: 16px; }
+.p-title { font-size: 22px; font-weight: 700; letter-spacing: 0.05em; }
+.p-dept { font-size: 12px; color: #6e6e73 !important; margin-top: 3px; }
+.p-badges { text-align: center; margin-bottom: 16px; }
+.p-badge { display: inline-block; padding: 4px 12px; border-radius: 4px; background: #e8f2fd; font-size: 12px; font-weight: 600; margin: 0 3px 4px; }
+.p-section { margin-bottom: 14px; }
+.p-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: #6e6e73 !important; border-bottom: 1px solid #e0e0e0; padding-bottom: 4px; margin-bottom: 8px; }
+.p-row { display: flex; gap: 24px; margin-bottom: 6px; flex-wrap: wrap; }
+.p-field { flex: 1; min-width: 120px; }
+.p-field-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #8e8e93 !important; font-weight: 500; }
+.p-field-value { font-size: 13px; font-weight: 500; border-bottom: 1px solid #ccc; padding-bottom: 2px; min-width: 80px; display: inline-block; }
+.p-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+.p-table th { background: #f5f5f7; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; padding: 6px 9px; border: 1px solid #e0e0e0; text-align: left; }
+.p-table td { padding: 6px 9px; border: 1px solid #e0e0e0; font-size: 12px; }
+.p-table tfoot td { font-weight: 600; background: #f5f5f7; }
+.p-hol { font-size: 9px; background: #fdf3e7; color: #bf5900; border: 1px solid #f5c57a; padding: 1px 4px; border-radius: 3px; margin-left: 4px; }
+.p-signs { margin-top: 22px; padding-top: 14px; border-top: 2px solid #1d1d1f; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+.p-sign-line { border-bottom: 1px solid #1d1d1f; height: 30px; margin-bottom: 4px; }
+.p-sign-label { font-size: 10px; color: #6e6e73 !important; text-align: center; }
+.p-footer { font-size: 11px; text-align: center; color: #8e8e93 !important; margin-top: 16px; font-style: italic; }
+
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+
+@media print {
+  body * { visibility: hidden; }
+  #print-document, #print-document * { visibility: visible; }
+  #print-document { position: fixed; top: 0; left: 0; width: 100%; }
+}
+
+@media (max-width: 640px) {
+  .value-grid, .form-grid, .bank-grid, .inst-controls, .sign-area { grid-template-columns: 1fr 1fr; }
+  .vi-row { grid-template-columns: 1fr; }
+  .inst-controls { grid-template-columns: 1fr 1fr; }
+  .sign-area { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <header>
+    <div>
+      <div class="header-eyebrow">Tesouraria · Dep. Jurídico</div>
+      <h1>Programação de Pagamento</h1>
+      <div class="header-sub">Preencha os dados e gere o documento formatado para impressão</div>
+    </div>
+    <div class="header-right">
+      <div class="header-date">
+        <div id="live-date"></div>
+        <div id="live-clock"></div>
+      </div>
+      <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()" title="Alternar tema">🌙</button>
+    </div>
+  </header>
+
+  <!-- 1. EMPRESA -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon blue">🏢</div>
+      <div>
+        <div class="section-title">Empresa</div>
+        <div class="section-sub">Selecione a empresa responsável pelo pagamento</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="company-pills" id="company-pills"></div>
+      <input type="hidden" id="selected-company">
+    </div>
+  </div>
+
+  <!-- 2. NATUREZA -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon indigo">⚖️</div>
+      <div>
+        <div class="section-title">Natureza do Pagamento</div>
+        <div class="section-sub">Informe se é um processo judicial e, se sim, seu tipo</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="toggle-group">
+        <button class="type-btn active none"        onclick="selectType(this,'none')">Não é processo</button>
+        <button class="type-btn trabalhista"         onclick="selectType(this,'trabalhista')">⚒️ Trabalhista</button>
+        <button class="type-btn civel"               onclick="selectType(this,'civel')">📋 Cível</button>
+        <button class="type-btn consumidor"          onclick="selectType(this,'consumidor')">🛒 Consumidor</button>
+        <button class="type-btn manual"              onclick="selectType(this,'manual')">✏️ Informação Manual</button>
+      </div>
+
+      <!-- PROCESSO fields -->
+      <div class="proc-section" id="sec-processo">
+        <div class="form-grid" style="margin-bottom:14px;">
+          <div class="form-row span-2">
+            <label class="form-label">Número do Processo</label>
+            <input type="text" class="form-input mono" id="f-proc-num" placeholder="0001234-56.2024.5.07.0001">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="form-row">
+            <label class="form-label">Reclamante</label>
+            <input type="text" class="form-input" id="f-reclamante" placeholder="Nome completo">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Reclamada</label>
+            <input type="text" class="form-input" id="f-reclamada" placeholder="Nome da empresa ou parte">
+          </div>
+        </div>
+        <div class="proc-section open" id="sec-trabalhista" style="padding-top:14px;margin-top:14px;border-top:1px dashed var(--border);">
+          <div class="form-grid-3">
+            <div class="form-row"><label class="form-label">Admissão</label><input type="date" class="form-input" id="f-admissao"></div>
+            <div class="form-row"><label class="form-label">Demissão</label><input type="date" class="form-input" id="f-demissao"></div>
+            <div class="form-row"><label class="form-label">Cargo</label><input type="text" class="form-input" id="f-cargo" placeholder="Ex: Auxiliar de Produção"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MANUAL fields -->
+      <div class="proc-section" id="sec-manual">
+        <div class="form-row" style="margin-bottom:14px;">
+          <label class="form-label">Descrição / Informações Complementares</label>
+          <textarea class="form-textarea" id="f-manual-desc" placeholder="Descreva livremente as informações relevantes para este pagamento..."></textarea>
+        </div>
+        <div class="form-grid">
+          <div class="form-row"><label class="form-label">Referência / Contrato / NF</label><input type="text" class="form-input" id="f-manual-ref" placeholder="Nº do contrato, NF, OS..."></div>
+          <div class="form-row"><label class="form-label">Responsável / Fornecedor</label><input type="text" class="form-input" id="f-manual-resp" placeholder="Nome ou razão social"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. VALORES PARA PAGAMENTO -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon green">💰</div>
+      <div>
+        <div class="section-title">Valores para Pagamento</div>
+        <div class="section-sub">Preencha valor e data de cada item. Marque ISENTO para excluir das parcelas.</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <!-- Acordo sempre visível -->
+      <div style="margin-bottom:16px;">
+        <div class="form-row">
+          <label class="form-label">Acordo / Principal</label>
+          <input type="text" class="form-input mono" id="f-acordo" placeholder="R$ 0,00"
+            oninput="fmtCur(this); calcTotal();" style="max-width:320px;">
+        </div>
+      </div>
+
+      <div class="value-grid">
+
+        <!-- GPS -->
+        <div class="value-item" id="vi-gps">
+          <div class="vi-header">
+            <span class="vi-label">GPS / INSS</span>
+            <label class="isento-wrap">
+              <input type="checkbox" class="isento-cb" id="iso-gps" onchange="toggleIso('gps')">
+              <span class="isento-txt">ISENTO</span>
+            </label>
+          </div>
+          <div class="vi-row">
+            <div><div class="vi-sub">Valor (R$)</div><input type="text" class="vi-input" id="f-gps" placeholder="R$ 0,00" oninput="fmtCur(this);calcTotal();syncVDs();"></div>
+            <div><div class="vi-sub">Data de Pagamento</div><input type="date" class="vi-input date-f" id="fd-gps" onchange="syncVDs();"></div>
+          </div>
+        </div>
+
+        <!-- CUSTAS -->
+        <div class="value-item" id="vi-custas">
+          <div class="vi-header">
+            <span class="vi-label">Custas Processuais</span>
+            <label class="isento-wrap">
+              <input type="checkbox" class="isento-cb" id="iso-custas" onchange="toggleIso('custas')">
+              <span class="isento-txt">ISENTO</span>
+            </label>
+          </div>
+          <div class="vi-row">
+            <div><div class="vi-sub">Valor (R$)</div><input type="text" class="vi-input" id="f-custas" placeholder="R$ 0,00" oninput="fmtCur(this);calcTotal();syncVDs();"></div>
+            <div><div class="vi-sub">Data de Pagamento</div><input type="date" class="vi-input date-f" id="fd-custas" onchange="syncVDs();"></div>
+          </div>
+        </div>
+
+        <!-- MULTA -->
+        <div class="value-item" id="vi-multa">
+          <div class="vi-header">
+            <span class="vi-label">Multa</span>
+            <label class="isento-wrap">
+              <input type="checkbox" class="isento-cb" id="iso-multa" onchange="toggleIso('multa')">
+              <span class="isento-txt">ISENTO</span>
+            </label>
+          </div>
+          <div class="vi-row">
+            <div><div class="vi-sub">Valor (R$)</div><input type="text" class="vi-input" id="f-multa" placeholder="R$ 0,00" oninput="fmtCur(this);calcTotal();syncVDs();"></div>
+            <div><div class="vi-sub">Data de Pagamento</div><input type="date" class="vi-input date-f" id="fd-multa" onchange="syncVDs();"></div>
+          </div>
+        </div>
+
+        <!-- HONORARIOS -->
+        <div class="value-item" id="vi-honorarios">
+          <div class="vi-header">
+            <span class="vi-label">Honorários Advocatícios</span>
+            <label class="isento-wrap">
+              <input type="checkbox" class="isento-cb" id="iso-honorarios" onchange="toggleIso('honorarios')">
+              <span class="isento-txt">ISENTO</span>
+            </label>
+          </div>
+          <div class="vi-row">
+            <div><div class="vi-sub">Valor (R$)</div><input type="text" class="vi-input" id="f-honorarios" placeholder="R$ 0,00" oninput="fmtCur(this);calcTotal();syncVDs();"></div>
+            <div><div class="vi-sub">Data de Pagamento</div><input type="date" class="vi-input date-f" id="fd-honorarios" onchange="syncVDs();"></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="totals-row" style="margin-top:4px;">
+        <div class="total-chip" style="border-left:3px solid var(--blue);">
+          <div class="total-chip-label">Total Geral</div>
+          <div class="total-chip-value blue" id="total-geral">R$ 0,00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. PARCELAS -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon amber">📅</div>
+      <div>
+        <div class="section-title">Parcelas</div>
+        <div class="section-sub">Configure e gere automaticamente as datas de vencimento</div>
+      </div>
+    </div>
+    <div class="section-body">
+
+      <div style="background:var(--surface2);border-radius:var(--radius-sm);border:1px solid var(--border);padding:16px;margin-bottom:16px;">
+        <div style="font-size:12px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;">⚡ Gerador Automático</div>
+        <div class="inst-controls">
+          <div class="form-row"><label class="form-label">Nº de Parcelas</label><input type="number" class="form-input" id="f-num-parc" min="1" max="60" value="6"></div>
+          <div class="form-row"><label class="form-label">Intervalo (dias)</label><input type="number" class="form-input" id="f-intervalo" min="1" value="30"></div>
+          <div class="form-row"><label class="form-label">1ª Data de Pagamento</label><input type="date" class="form-input" id="f-primeira-data"></div>
+          <button class="gen-btn" onclick="generateInstallments()">⚡ Gerar</button>
+        </div>
+        <div style="font-size:12px;color:var(--text-3);">⚙️ Fins de semana são movidos para a próxima segunda útil. Feriados nacionais e do Ceará são marcados em laranja.</div>
+      </div>
+
+      <div class="inst-wrap">
+        <table class="inst-table">
+          <thead>
+            <tr>
+              <th class="td-n">Nº da Parcela</th>
+              <th style="min-width:160px;">Valor (R$)</th>
+              <th style="min-width:220px;">Data do Pagamento</th>
+              <th style="width:40px;"></th>
+            </tr>
+          </thead>
+          <tbody id="inst-body">
+            <tr id="empty-row">
+              <td colspan="3" style="text-align:center;padding:28px;color:var(--text-3);font-size:13px;">Use o gerador acima ou adicione parcelas manualmente abaixo ↓</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <button class="add-row-btn" onclick="addManualRow()">+ Adicionar parcela manualmente</button>
+      <div class="manual-hint">
+        <span>Valor (R$)</span>
+        <span>Data do Pagamento</span>
+        <span>Observação</span>
+      </div>
+
+      <div class="totals-row" id="parc-totals" style="display:none;">
+        <div class="total-chip">
+          <div class="total-chip-label">Parcelas</div>
+          <div class="total-chip-value" id="count-parc">0</div>
+        </div>
+        <div class="total-chip" style="border-left:3px solid var(--green);">
+          <div class="total-chip-label">Total Parcelado</div>
+          <div class="total-chip-value green" id="total-parc">R$ 0,00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. DEPÓSITO -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon blue">🏦</div>
+      <div>
+        <div class="section-title">Dados para Depósito / PIX</div>
+        <div class="section-sub">Informações bancárias do beneficiário</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div class="bank-grid" style="margin-bottom:14px;">
+        <div class="form-row"><label class="form-label">Beneficiário</label><input type="text" class="form-input" id="f-beneficiario" placeholder="Nome completo ou razão social"></div>
+        <div class="form-row"><label class="form-label">Banco</label><input type="text" class="form-input" id="f-banco" placeholder="Ex: Bradesco / 237"></div>
+        <div class="form-row"><label class="form-label">Agência</label><input type="text" class="form-input mono" id="f-agencia" placeholder="0000-0"></div>
+        <div class="form-row"><label class="form-label">Conta</label><input type="text" class="form-input mono" id="f-conta" placeholder="00000-0"></div>
+      </div>
+      <div class="form-grid" style="margin-bottom:14px;">
+        <div class="form-row">
+          <label class="form-label">CPF / CNPJ</label>
+          <input type="text" class="form-input mono" id="f-cpf" placeholder="CPF ou CNPJ — pontuação inserida automaticamente" oninput="fmtCpfCnpj(this)" maxlength="18">
+        </div>
+        <div class="form-row"><label class="form-label">PIX (opcional)</label><input type="text" class="form-input" id="f-pix" placeholder="Chave PIX (CPF, e-mail, telefone ou aleatória)"></div>
+      </div>
+      <label style="display:inline-flex;align-items:center;gap:10px;cursor:pointer;padding:10px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--border-med);background:var(--surface2);transition:all var(--transition);" id="dep-judicial-wrap" onclick="toggleDepJudicial()">
+        <input type="checkbox" id="cb-dep-judicial" style="width:16px;height:16px;accent-color:var(--indigo);cursor:pointer;" onchange="toggleDepJudicial()">
+        <span style="font-size:13px;font-weight:600;color:var(--text-2);letter-spacing:0.02em;" id="dep-judicial-label">DEPÓSITO JUDICIAL</span>
+        <span style="font-size:11px;color:var(--text-3);margin-left:4px;" id="dep-judicial-note"></span>
+      </label>
+    </div>
+  </div>
+
+  <!-- 6. RECEBIMENTO & ASSINATURA -->
+  <div class="section-card">
+    <div class="section-header">
+      <div class="section-icon green">✅</div>
+      <div>
+        <div class="section-title">Recebimento &amp; Assinatura</div>
+        <div class="section-sub">Data de recebimento e campos de assinatura para finalização do documento</div>
+      </div>
+    </div>
+    <div class="section-body">
+      <div style="margin-bottom:20px; max-width:260px;">
+        <div class="form-row">
+          <label class="form-label">Data de Recebimento</label>
+          <input type="date" class="form-input" id="f-data-rec">
+        </div>
+      </div>
+      <div style="font-size:12px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:12px;">Assinaturas</div>
+      <div class="sign-area">
+        <div class="sign-field"><div class="sign-line"></div><div class="sign-sub">Responsável pelo Pagamento</div></div>
+        <div class="sign-field"><div class="sign-line"></div><div class="sign-sub">Tesouraria / Financeiro</div></div>
+        <div class="sign-field"><div class="sign-line"></div><div class="sign-sub">Departamento Jurídico</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions-bar">
+    <button class="btn-secondary" onclick="clearForm()">🗑 Limpar tudo</button>
+    <button class="btn-primary" onclick="openPrint()">🖨 Gerar &amp; Imprimir</button>
+  </div>
+
+</div>
+
+<!-- ADD COMPANY MODAL -->
+<div class="overlay" id="ov-company" onclick="if(event.target===this)closeCo()">
+  <div class="modal">
+    <div class="modal-header">
+      <div><div class="modal-eyebrow">Cadastro</div><div class="modal-title">Nova Empresa</div></div>
+      <button class="modal-close" onclick="closeCo()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row"><label class="form-label">Nome da Empresa</label><input type="text" class="form-input" id="new-co-name" placeholder="Ex: GRUPO IACE"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" style="flex:1" onclick="closeCo()">Cancelar</button>
+        <button class="btn-primary" style="flex:1;justify-content:center;" onclick="addCo()">Cadastrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT OVERLAY -->
+<div class="overlay" id="ov-print" onclick="if(event.target===this)closePrint()">
+  <div class="modal" style="max-width:720px;max-height:90vh;overflow-y:auto;">
+    <div class="modal-header" style="position:sticky;top:0;z-index:10;background:var(--surface);">
+      <div><div class="modal-eyebrow">Visualização</div><div class="modal-title">Programação de Pagamento</div></div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <button class="btn-primary" onclick="doPrint()" style="padding:8px 18px;font-size:13px;">🖨 Imprimir</button>
+        <button class="modal-close" onclick="closePrint()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body" style="padding:20px;">
+      <div id="print-document" class="print-doc"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══ THEME ═══
+const themeBtn=document.getElementById('theme-toggle');
+function applyTheme(d){document.documentElement.classList.toggle('dark',d);themeBtn.textContent=d?'☀️':'🌙';localStorage.setItem('theme',d?'dark':'light');}
+function toggleTheme(){applyTheme(!document.documentElement.classList.contains('dark'));}
+const st=localStorage.getItem('theme');
+applyTheme(st?st==='dark':window.matchMedia('(prefers-color-scheme:dark)').matches);
+
+// ═══ CLOCK ═══
+function tick(){const n=new Date();document.getElementById('live-clock').textContent=n.toLocaleTimeString('pt-BR');document.getElementById('live-date').textContent=n.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});}
+tick();setInterval(tick,1000);
+
+// ═══ HOLIDAYS ═══
+function calcEaster(y){const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),day=((h+l-7*m+114)%31)+1;return `${y}-${String(mo).padStart(2,'0')}-${String(day).padStart(2,'0')}`;}
+function addD(ds,n){const d=new Date(ds+'T12:00:00');d.setDate(d.getDate()+n);return d.toISOString().split('T')[0];}
+function buildHol(yrs){
+  const h={};
+  const names={'01-01':'Confraternização Universal','04-21':'Tiradentes','05-01':'Dia do Trabalho','09-07':'Independência','10-12':'N. Sra. Aparecida','11-02':'Finados','11-15':'Proclamação da República','11-20':'Consciência Negra','12-25':'Natal','03-19':'São José (CE)','08-15':'N. Sra. Assunção (CE)'};
+  yrs.forEach(y=>{
+    Object.keys(names).forEach(mmdd=>{h[`${y}-${mmdd}`]=names[mmdd];});
+    const e=calcEaster(y);
+    h[addD(e,-48)]='Carnaval';h[addD(e,-47)]='Carnaval';h[addD(e,-2)]='Sexta-Feira Santa';h[e]='Páscoa';h[addD(e,60)]='Corpus Christi';
+  });
+  return h;
+}
+const HOL=buildHol([2024,2025,2026,2027,2028]);
+function isHol(ds){return !!HOL[ds];}
+function holName(ds){return HOL[ds]||'Feriado';}
+function nextBiz(ds){let d=new Date(ds+'T12:00:00');while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);return d.toISOString().split('T')[0];}
+function fmtD(ds){if(!ds)return '';const[y,m,d]=ds.split('-');return `${d}/${m}/${y}`;}
+function fmtBRL(n){return 'R$ '+n.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function parseBRL(s){if(!s)return 0;return parseFloat(s.replace('R$','').replace(/\./g,'').replace(',','.').trim())||0;}
+
+// ═══ CURRENCY ═══
+function fmtCur(el){let v=el.value.replace(/\D/g,'');if(!v){el.value='';return;}el.value='R$ '+(parseInt(v,10)/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});}
+
+// ═══ CPF / CNPJ ═══
+function fmtCpfCnpj(el){
+  let v=el.value.replace(/\D/g,'');
+  if(v.length<=11){v=v.replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d{1,2})$/,'$1-$2');}
+  else{v=v.slice(0,14).replace(/(\d{2})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1.$2').replace(/(\d{3})(\d)/,'$1/$2').replace(/(\d{4})(\d{1,2})$/,'$1-$2');}
+  el.value=v;
+}
+
+// ═══ ISENTO ═══
+const isoState={gps:false,custas:false,multa:false,honorarios:false};
+function toggleIso(k){
+  const cb=document.getElementById('iso-'+k);
+  isoState[k]=cb.checked;
+  document.getElementById('vi-'+k).classList.toggle('isento-on',cb.checked);
+  document.getElementById('f-'+k).disabled=cb.checked;
+  document.getElementById('fd-'+k).disabled=cb.checked;
+  calcTotal(); syncVDs();
+}
+
+// ═══ TOTAL ═══
+function calcTotal(){
+  let t=parseBRL(document.getElementById('f-acordo').value);
+  ['gps','custas','multa','honorarios'].forEach(k=>{if(!isoState[k])t+=parseBRL(document.getElementById('f-'+k).value);});
+  document.getElementById('total-geral').textContent=fmtBRL(t);
+}
+
+// ═══ VALUE-DATE ROWS IN PARCELAS ═══
+let installmentRows=[];
+function syncVDs(){
+  installmentRows=installmentRows.filter(r=>!r.isVD);
+  const items=[{k:'gps',l:'GPS / INSS'},{k:'custas',l:'Custas Processuais'},{k:'multa',l:'Multa'},{k:'honorarios',l:'Honorários Advocatícios'}];
+  items.forEach(item=>{
+    if(isoState[item.k])return;
+    const val=document.getElementById('f-'+item.k).value;
+    const dt=document.getElementById('fd-'+item.k).value;
+    if(!val&&!dt)return;
+    const adj=dt?nextBiz(dt):'';
+    installmentRows.push({num:'—',value:val||'',date:adj,holiday:adj&&isHol(adj),holidayName:adj&&isHol(adj)?holName(adj):'',obs:item.l,isVD:true});
+  });
+  renderTable();
+}
+
+// ═══ COMPANIES ═══
+let companies=['INDÚSTRIA NAVAL DO CEARÁ','MARINA PARK','INACE IATES'];
+let selCo='';
+function renderCo(){
+  const c=document.getElementById('company-pills');c.innerHTML='';
+  companies.forEach(n=>{const b=document.createElement('button');b.className='company-pill'+(selCo===n?' active':'');b.textContent=n;b.onclick=()=>{selCo=n;document.getElementById('selected-company').value=n;renderCo();};c.appendChild(b);});
+  const a=document.createElement('button');a.className='company-pill add-co';a.innerHTML='<span>+</span> Cadastrar empresa';a.onclick=()=>document.getElementById('ov-company').classList.add('open');c.appendChild(a);
+}
+function closeCo(){document.getElementById('ov-company').classList.remove('open');document.getElementById('new-co-name').value='';}
+function addCo(){const n=document.getElementById('new-co-name').value.trim().toUpperCase();if(!n)return;if(!companies.includes(n))companies.push(n);selCo=n;renderCo();closeCo();}
+renderCo();
+
+// ═══ TYPE SELECT ═══
+let curType='none';
+function selectType(btn,type){
+  document.querySelectorAll('.type-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  curType=type;
+  const sp=document.getElementById('sec-processo');
+  const sm=document.getElementById('sec-manual');
+  const st=document.getElementById('sec-trabalhista');
+  const isProc=['trabalhista','civel','consumidor'].includes(type);
+  sp.classList.toggle('open',isProc);
+  sm.classList.toggle('open',type==='manual');
+  st.classList.toggle('open',type==='trabalhista');
+}
+
+// ═══ INSTALLMENTS ═══
+function generateInstallments(){
+  const num=parseInt(document.getElementById('f-num-parc').value)||6;
+  const intv=parseInt(document.getElementById('f-intervalo').value)||30;
+  const first=document.getElementById('f-primeira-data').value;
+  if(!first){alert('Informe a 1ª data de pagamento.');return;}
+  const acordo=parseBRL(document.getElementById('f-acordo').value);
+  const perI=num>0?acordo/num:0;
+  installmentRows=installmentRows.filter(r=>r.isVD);
+  for(let i=0;i<num;i++){
+    const raw=new Date(first+'T12:00:00');raw.setDate(raw.getDate()+intv*i);
+    const ds=nextBiz(raw.toISOString().split('T')[0]);
+    installmentRows.splice(i,0,{num:i+1,value:perI>0?fmtBRL(perI):'',date:ds,holiday:isHol(ds),holidayName:isHol(ds)?holName(ds):'',obs:'',isVD:false});
+  }
+  renderTable();
+}
+
+function renderTable(){
+  const tbody=document.getElementById('inst-body');
+  tbody.innerHTML='';
+  const numbered=installmentRows.filter(r=>!r.isVD);
+  const vds=installmentRows.filter(r=>r.isVD);
+  if(numbered.length===0&&vds.length===0){
+    tbody.innerHTML='<tr id="empty-row"><td colspan="4" style="text-align:center;padding:28px;color:var(--text-3);font-size:13px;">Use o gerador acima ou adicione parcelas manualmente abaixo ↓</td></tr>';
+    document.getElementById('parc-totals').style.display='none';
+    return;
+  }
+  numbered.forEach((row,idx)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="td-n">${String(row.num).padStart(2,'0')}</td>
+      <td><input type="text" class="inst-input mono" placeholder="R$ 0,00" value="${row.value}" data-idx="${idx}" oninput="onIVal(this);updSum()"></td>
+      <td><div class="date-cell">
+        <input type="date" class="inst-input" value="${row.date}" data-idx="${idx}" onchange="onIDate(this)">
+        ${row.holiday?`<span class="hol-badge" title="${row.holidayName}">🎌 ${row.holidayName}</span>`:''}
+      </div></td>
+      <td style="text-align:center;"><button onclick="deleteRow(${idx})" title="Excluir parcela" style="background:none;border:none;cursor:pointer;color:var(--text-3);font-size:15px;padding:2px 4px;border-radius:4px;transition:all 0.15s;" onmouseover="this.style.color='var(--red)';this.style.background='var(--red-light)'" onmouseout="this.style.color='var(--text-3)';this.style.background='none'">✕</button></td>`;
+    tbody.appendChild(tr);
+  });
+  if(vds.length){
+    const sep=document.createElement('tr');
+    sep.innerHTML='<td colspan="4" style="background:var(--surface2);padding:6px 14px;font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.05em;border-top:2px solid var(--border);">Outros pagamentos com data específica</td>';
+    tbody.appendChild(sep);
+    vds.forEach(row=>{
+      const tr=document.createElement('tr');
+      tr.style.background='var(--surface2)';
+      tr.innerHTML=`
+        <td class="td-n" style="color:var(--text-3);font-size:11px;">—</td>
+        <td style="font-family:var(--mono);font-size:13px;">${row.value||'—'}</td>
+        <td><div class="date-cell">
+          <span style="font-size:13px;">${fmtD(row.date)||'—'}</span>
+          ${row.holiday?`<span class="hol-badge">${row.holidayName}</span>`:''}
+          <span style="margin-left:8px;font-size:11px;color:var(--text-3);">${row.obs}</span>
+        </div></td>
+        <td></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+  document.getElementById('parc-totals').style.display='flex';
+  document.getElementById('count-parc').textContent=numbered.length+' parcela'+(numbered.length!==1?'s':'');
+  updSum();
+}
+
+function onIVal(el){const idx=parseInt(el.dataset.idx);let v=el.value.replace(/\D/g,'');if(!v){el.value='';installmentRows[idx].value='';return;}const f='R$ '+(parseInt(v,10)/100).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});el.value=f;installmentRows[idx].value=f;}
+function onIDate(el){const idx=parseInt(el.dataset.idx);const adj=nextBiz(el.value||new Date().toISOString().split('T')[0]);installmentRows[idx].date=adj;installmentRows[idx].holiday=isHol(adj);installmentRows[idx].holidayName=isHol(adj)?holName(adj):'';renderTable();}
+function updSum(){let s=0;installmentRows.filter(r=>!r.isVD).forEach(r=>s+=parseBRL(r.value));document.getElementById('total-parc').textContent=fmtBRL(s);}
+function addManualRow(){const n=installmentRows.filter(r=>!r.isVD).length+1;installmentRows.push({num:n,value:'',date:'',holiday:false,holidayName:'',obs:'',isVD:false});renderTable();}
+function deleteRow(idx){installmentRows.splice(idx,1);// renumber
+let n=1;installmentRows.filter(r=>!r.isVD).forEach(r=>r.num=n++);renderTable();}
+
+// ═══ DEPÓSITO JUDICIAL ═══
+function toggleDepJudicial(){
+  const cb=document.getElementById('cb-dep-judicial');
+  const wrap=document.getElementById('dep-judicial-wrap');
+  const note=document.getElementById('dep-judicial-note');
+  const label=document.getElementById('dep-judicial-label');
+  if(cb.checked){
+    wrap.style.borderColor='var(--indigo)';wrap.style.background='var(--indigo-light)';
+    label.style.color='var(--indigo)';
+    note.textContent='— Solicitar boleto para o Jurídico';note.style.color='var(--indigo)';
+  } else {
+    wrap.style.borderColor='var(--border-med)';wrap.style.background='var(--surface2)';
+    label.style.color='var(--text-2)';note.textContent='';
+  }
+}
+
+// ═══ PRINT ═══
+function openPrint(){
+  const co=selCo||'—';
+  const typeLabels={none:'',trabalhista:'TRABALHISTA',civel:'CÍVEL',consumidor:'CONSUMIDOR',manual:'MANUAL'};
+  const tl=typeLabels[curType]||'';
+
+  let procSec='';
+  if(['trabalhista','civel','consumidor'].includes(curType)){
+    const pn=document.getElementById('f-proc-num').value||'';
+    const rc=document.getElementById('f-reclamante').value||'';
+    const rd=document.getElementById('f-reclamada').value||co;
+    let wf='';
+    if(curType==='trabalhista'){
+      const ad=fmtD(document.getElementById('f-admissao').value);
+      const dm=fmtD(document.getElementById('f-demissao').value);
+      const cg=document.getElementById('f-cargo').value||'';
+      wf=`<div class="p-row" style="margin-top:8px;">
+        <div class="p-field"><div class="p-field-label">Admissão</div><div class="p-field-value">${ad||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</div></div>
+        <div class="p-field"><div class="p-field-label">Demissão</div><div class="p-field-value">${dm||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</div></div>
+        <div class="p-field"><div class="p-field-label">Cargo</div><div class="p-field-value">${cg||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</div></div>
+      </div>`;
+    }
+    procSec=`<div class="p-section"><div class="p-section-title">Processo ${tl}</div>
+      <div class="p-row"><div class="p-field" style="flex:3"><div class="p-field-label">Número do Processo</div><div class="p-field-value">${pn||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</div></div></div>
+      <div class="p-row" style="margin-top:8px;">
+        <div class="p-field"><div class="p-field-label">Reclamante</div><div class="p-field-value">${rc||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</div></div>
+        <div class="p-field"><div class="p-field-label">Reclamada</div><div class="p-field-value">${rd}</div></div>
+      </div>${wf}</div>`;
+  } else if(curType==='manual'){
+    const desc=document.getElementById('f-manual-desc').value||'';
+    const ref=document.getElementById('f-manual-ref').value||'';
+    const resp=document.getElementById('f-manual-resp').value||'';
+    procSec=`<div class="p-section"><div class="p-section-title">Informações do Pagamento</div>
+      ${ref||resp?`<div class="p-row">${ref?`<div class="p-field"><div class="p-field-label">Referência / Contrato</div><div class="p-field-value">${ref}</div></div>`:''} ${resp?`<div class="p-field"><div class="p-field-label">Responsável / Fornecedor</div><div class="p-field-value">${resp}</div></div>`:''}</div>`:''}
+      ${desc?`<div style="margin-top:8px;font-size:12px;padding:8px;border:1px solid #e0e0e0;border-radius:4px;">${desc.replace(/\n/g,'<br>')}</div>`:''}</div>`;
+  }
+
+  const acordo=document.getElementById('f-acordo').value||'';
+  const tg=document.getElementById('total-geral').textContent;
+  let valRows=acordo?`<tr><td>Acordo / Principal</td><td style="font-family:monospace">${acordo}</td><td>—</td></tr>`:'';
+  [{k:'gps',l:'GPS / INSS'},{k:'custas',l:'Custas Processuais'},{k:'multa',l:'Multa'},{k:'honorarios',l:'Honorários Advocatícios'}].forEach(it=>{
+    if(isoState[it.k]){valRows+=`<tr><td style="color:#8e8e93">${it.l}</td><td style="color:#8e8e93;font-style:italic">ISENTO</td><td>—</td></tr>`;}
+    else{const v=document.getElementById('f-'+it.k).value||'';const d=fmtD(document.getElementById('fd-'+it.k).value);if(v||d)valRows+=`<tr><td>${it.l}</td><td style="font-family:monospace">${v||'—'}</td><td>${d||'—'}</td></tr>`;}
+  });
+
+  const numbered=installmentRows.filter(r=>!r.isVD);
+  const vds=installmentRows.filter(r=>r.isVD);
+  let instHTML=numbered.length?numbered.map(r=>`<tr><td style="text-align:center;font-weight:600">${String(r.num).padStart(2,'0')}</td><td style="font-family:monospace">${r.value||'—'}</td><td>${fmtD(r.date)||'—'}${r.holiday?`<span class="p-hol">🎌 ${r.holidayName}</span>`:''}</td></tr>`).join(''):'<tr><td colspan="3" style="text-align:center;color:#8e8e93">Nenhuma parcela cadastrada</td></tr>';
+  const guiasItems=['GPS / INSS','Custas Processuais'];
+  let vdHTML=vds.length?`<table class="p-table" style="margin-top:8px;"><thead><tr><th colspan="4" style="background:#fdf3e7;color:#bf5900;">Outros Pagamentos com Data Específica</th></tr><tr><th>Item</th><th>Valor</th><th>Data</th><th>Observação</th></tr></thead><tbody>${vds.map(r=>{const nota=guiasItems.includes(r.obs)?'<span style="font-size:10px;color:#bf5900;font-weight:600;">⚠️ Solicitar guias ao Dep. Jurídico</span>':'—';return`<tr><td>${r.obs}</td><td style="font-family:monospace">${r.value||'—'}</td><td>${fmtD(r.date)||'—'}${r.holiday?`<span class="p-hol">${r.holidayName}</span>`:''}</td><td>${nota}</td></tr>`;}).join('')}</tbody></table>`:'';
+
+  const depJudicial=document.getElementById('cb-dep-judicial').checked;
+  const ban=document.getElementById('f-banco').value||'';
+  const ag=document.getElementById('f-agencia').value||'';
+  const ct=document.getElementById('f-conta').value||'';
+  const cpf=document.getElementById('f-cpf').value||'';
+  const pix=document.getElementById('f-pix').value||'';
+  const drec=document.getElementById('f-data-rec').value||'';
+  const today=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+
+  document.getElementById('print-document').innerHTML=`
+    <div class="p-header">
+      <div class="p-title">PROGRAMAÇÃO DE PAGAMENTO</div>
+      <div class="p-dept">Tesouraria — Departamento Jurídico</div>
+    </div>
+    <div class="p-badges">
+      <span class="p-badge">${co}</span>
+      ${tl?`<span class="p-badge" style="background:#eceffe">${tl}</span>`:''}
+    </div>
+    ${procSec}
+    <div class="p-section">
+      <div class="p-section-title">Valores para Pagamento</div>
+      <table class="p-table">
+        <thead><tr><th>Descrição</th><th>Valor</th><th>Data Pagto.</th></tr></thead>
+        <tbody>${valRows||'<tr><td colspan="3" style="text-align:center;color:#8e8e93">—</td></tr>'}</tbody>
+      </table>
+      <div style="text-align:right;font-weight:700;font-size:13px;margin-top:6px;padding:5px 9px;background:#f5f5f7;border-radius:4px;">Total Geral: ${tg}</div>
+    </div>
+    <div class="p-section">
+      <div class="p-section-title">Parcelas (${numbered.length})</div>
+      <table class="p-table">
+        <thead><tr><th style="width:50px">Nº</th><th>Valor</th><th>Data do Pagamento</th></tr></thead>
+        <tbody>${instHTML}</tbody>
+      </table>
+      ${vdHTML}
+    </div>
+    <div class="p-section">
+      <div class="p-section-title">Dados para Depósito</div>
+      ${depJudicial?`<div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:8px;padding:4px 10px;border-radius:4px;background:#eceffe;border:1px solid #7b8ff5;font-size:11px;font-weight:700;color:#3b4cca;letter-spacing:0.03em;">🏛 DEPÓSITO JUDICIAL &nbsp;·&nbsp; <span style="font-weight:500;">Solicitar boleto para o Jurídico</span></div>`:''}
+      <table class="p-table"><tbody>
+        <tr><td><strong>Beneficiário:</strong> ${ben||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</td><td><strong>CPF/CNPJ:</strong> ${cpf||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</td></tr>
+        <tr><td><strong>Banco:</strong> ${ban||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'} &nbsp; <strong>Ag.:</strong> ${ag||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'} &nbsp; <strong>Conta:</strong> ${ct||'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}</td><td>${pix?`<strong>PIX:</strong> ${pix}`:''}</td></tr>
+      </tbody></table>
+    </div>
+    <div class="p-signs">
+      <div><div class="p-sign-line"></div><div class="p-sign-label">DATA DE RECEBIMENTO: ${fmtD(drec)||'___/___/______'}</div></div>
+      <div><div class="p-sign-line"></div><div class="p-sign-label">TESOURARIA / FINANCEIRO</div></div>
+      <div><div class="p-sign-line"></div><div class="p-sign-label">DEPARTAMENTO JURÍDICO</div></div>
+    </div>
+    <div class="p-footer">Emitido em ${today} — Atenciosamente, Departamento Jurídico</div>`;
+  document.getElementById('ov-print').classList.add('open');
+}
+
+function closePrint(){document.getElementById('ov-print').classList.remove('open');}
+
+function doPrint(){
+  const doc=document.getElementById('print-document');
+  const w=window.open('','_blank','width=820,height=950');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Programação de Pagamento</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:'DM Sans',sans-serif;color:#1d1d1f;padding:32px;font-size:13px;}
+  .p-header{text-align:center;border-bottom:2px solid #1d1d1f;padding-bottom:12px;margin-bottom:14px;}
+  .p-title{font-size:21px;font-weight:700;letter-spacing:0.05em;}
+  .p-dept{font-size:11px;color:#6e6e73;margin-top:2px;}
+  .p-badges{text-align:center;margin-bottom:14px;}
+  .p-badge{display:inline-block;padding:3px 10px;border-radius:4px;background:#e8f2fd;font-size:11px;font-weight:600;margin:0 3px;}
+  .p-section{margin-bottom:12px;}
+  .p-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:#6e6e73;border-bottom:1px solid #e0e0e0;padding-bottom:3px;margin-bottom:7px;}
+  .p-row{display:flex;gap:20px;margin-bottom:5px;flex-wrap:wrap;}
+  .p-field{flex:1;min-width:100px;}
+  .p-field-label{font-size:9px;text-transform:uppercase;letter-spacing:0.05em;color:#8e8e93;font-weight:500;}
+  .p-field-value{font-size:12px;font-weight:500;border-bottom:1px solid #ccc;padding-bottom:2px;display:inline-block;min-width:80px;}
+  .p-table{width:100%;border-collapse:collapse;margin-top:5px;}
+  .p-table th{background:#f5f5f7;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;padding:5px 8px;border:1px solid #e0e0e0;text-align:left;}
+  .p-table td{padding:5px 8px;border:1px solid #e0e0e0;font-size:12px;}
+  .p-hol{font-size:9px;background:#fdf3e7;color:#bf5900;border:1px solid #f5c57a;padding:1px 4px;border-radius:3px;margin-left:4px;}
+  .p-signs{margin-top:20px;padding-top:12px;border-top:2px solid #1d1d1f;display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;}
+  .p-sign-line{border-bottom:1px solid #1d1d1f;height:28px;margin-bottom:4px;}
+  .p-sign-label{font-size:9px;color:#6e6e73;text-align:center;}
+  .p-footer{font-size:10px;text-align:center;color:#8e8e93;margin-top:14px;font-style:italic;}
+  </style></head><body>${doc.innerHTML}</body></html>`);
+  w.document.close();setTimeout(()=>w.print(),500);
+}
+
+// ═══ CLEAR ═══
+function clearForm(){
+  if(!confirm('Deseja realmente limpar todos os campos?'))return;
+  document.querySelectorAll('.form-input,.form-textarea,.vi-input').forEach(el=>{if(!el.disabled)el.value='';});
+  ['gps','custas','multa','honorarios'].forEach(k=>{
+    isoState[k]=false;
+    document.getElementById('iso-'+k).checked=false;
+    document.getElementById('vi-'+k).classList.remove('isento-on');
+    document.getElementById('f-'+k).disabled=false;
+    document.getElementById('fd-'+k).disabled=false;
+    document.getElementById('f-'+k).value='';
+    document.getElementById('fd-'+k).value='';
+  });
+  installmentRows=[];renderTable();
+  selCo='';renderCo();
+  selectType(document.querySelector('.type-btn.none'),'none');
+  document.getElementById('total-geral').textContent='R$ 0,00';
+}
+
+// ═══ ESC + DEFAULTS ═══
+document.addEventListener('keydown',e=>{if(e.key==='Escape')document.querySelectorAll('.overlay.open').forEach(el=>el.classList.remove('open'));});
+const dd=new Date();dd.setDate(dd.getDate()+30);
+document.getElementById('f-primeira-data').value=dd.toISOString().split('T')[0];
+document.getElementById('f-data-rec').value=new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
