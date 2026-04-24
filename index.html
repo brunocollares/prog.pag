@@ -808,6 +808,7 @@ function openPrint(){
   let vdHTML=vds.length?`<table class="p-table" style="margin-top:8px;"><thead><tr><th colspan="4" style="background:#fdf3e7;color:#bf5900;">Outros Pagamentos com Data Específica</th></tr><tr><th>Item</th><th>Valor</th><th>Data</th><th>Observação</th></tr></thead><tbody>${vds.map(r=>{const nota=guiasItems.includes(r.obs)?'<span style="font-size:10px;color:#bf5900;font-weight:600;">⚠️ Solicitar guias ao Dep. Jurídico</span>':'—';return`<tr><td>${r.obs}</td><td style="font-family:monospace">${r.value||'—'}</td><td>${fmtD(r.date)||'—'}${r.holiday?`<span class="p-hol">${r.holidayName}</span>`:''}</td><td>${nota}</td></tr>`;}).join('')}</tbody></table>`:'';
 
   const depJudicial=document.getElementById('cb-dep-judicial').checked;
+  const ben=document.getElementById('f-beneficiario').value||'';
   const ban=document.getElementById('f-banco').value||'';
   const ag=document.getElementById('f-agencia').value||'';
   const ct=document.getElementById('f-conta').value||'';
