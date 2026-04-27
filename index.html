@@ -284,11 +284,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.
         </div>
         <div class="form-grid">
           <div class="form-row">
-            <label class="form-label">Reclamante</label>
+            <label class="form-label">Reclamante/Requerente</label>
             <input type="text" class="form-input" id="f-reclamante" placeholder="Nome completo">
           </div>
           <div class="form-row">
-            <label class="form-label">Reclamada</label>
+            <label class="form-label">Reclamada/Requerido</label>
             <input type="text" class="form-input" id="f-reclamada" placeholder="Nome da empresa ou parte">
           </div>
         </div>
@@ -398,6 +398,10 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.
         </div>
 
       </div>
+
+      <!-- CUSTOM VALUE ITEMS -->
+      <div id="custom-value-items"></div>
+      <button class="add-row-btn" onclick="addCustomValueItem()" style="margin-bottom:12px;">+ Acrescentar item manualmente</button>
 
       <div class="totals-row" style="margin-top:4px;">
         <div class="total-chip" style="border-left:3px solid var(--blue);">
@@ -614,6 +618,67 @@ function fmtCpfCnpj(el){
   el.value=v;
 }
 
+// ═══ CUSTOM VALUE ITEMS ═══
+let customItems = [];
+
+function addCustomValueItem() {
+  const id = 'cvi-' + Date.now();
+  customItems.push({ id, label: '', value: '', date: '', isento: false });
+  renderCustomItems();
+}
+
+function renderCustomItems() {
+  const container = document.getElementById('custom-value-items');
+  container.innerHTML = '';
+  customItems.forEach((item, idx) => {
+    const div = document.createElement('div');
+    div.className = 'value-item' + (item.isento ? ' isento-on' : '');
+    div.id = 'cvi-wrap-' + idx;
+    div.style.marginBottom = '12px';
+    div.innerHTML = `
+      <div class="vi-header">
+        <input type="text" value="${item.label}" placeholder="Nome do item (ex: Honorários Periciais)"
+          style="background:transparent;border:none;outline:none;font-size:11px;font-weight:700;color:var(--text-2);text-transform:uppercase;letter-spacing:0.05em;flex:1;font-family:var(--font);"
+          oninput="customItems[${idx}].label=this.value;syncVDs();">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <label class="isento-wrap">
+            <input type="checkbox" class="isento-cb" ${item.isento ? 'checked' : ''} onchange="toggleCustomIso(${idx},this)">
+            <span class="isento-txt">ISENTO</span>
+          </label>
+          <button onclick="removeCustomItem(${idx})" title="Remover item"
+            style="background:none;border:none;cursor:pointer;color:var(--text-3);font-size:14px;padding:2px 4px;border-radius:4px;transition:all 0.15s;line-height:1;"
+            onmouseover="this.style.color='var(--red)';this.style.background='var(--red-light)'"
+            onmouseout="this.style.color='var(--text-3)';this.style.background='none'">✕</button>
+        </div>
+      </div>
+      <div class="vi-row">
+        <div>
+          <div class="vi-sub">Valor (R$)</div>
+          <input type="text" class="vi-input" value="${item.value}" placeholder="R$ 0,00" ${item.isento ? 'disabled' : ''}
+            oninput="fmtCur(this);customItems[${idx}].value=this.value;calcTotal();syncVDs();">
+        </div>
+        <div>
+          <div class="vi-sub">Data de Pagamento</div>
+          <input type="date" class="vi-input date-f" value="${item.date}" ${item.isento ? 'disabled' : ''}
+            onchange="customItems[${idx}].date=this.value;syncVDs();">
+        </div>
+      </div>`;
+    container.appendChild(div);
+  });
+  calcTotal();
+  syncVDs();
+}
+
+function toggleCustomIso(idx, cb) {
+  customItems[idx].isento = cb.checked;
+  renderCustomItems();
+}
+
+function removeCustomItem(idx) {
+  customItems.splice(idx, 1);
+  renderCustomItems();
+}
+
 // ═══ ISENTO ═══
 const isoState={gps:false,custas:false,multa:false,honorarios:false};
 function toggleIso(k){
@@ -629,6 +694,7 @@ function toggleIso(k){
 function calcTotal(){
   let t=parseBRL(document.getElementById('f-acordo').value);
   ['gps','custas','multa','honorarios'].forEach(k=>{if(!isoState[k])t+=parseBRL(document.getElementById('f-'+k).value);});
+  customItems.forEach(ci=>{if(!ci.isento)t+=parseBRL(ci.value);});
   document.getElementById('total-geral').textContent=fmtBRL(t);
 }
 
@@ -644,6 +710,13 @@ function syncVDs(){
     if(!val&&!dt)return;
     const adj=dt?nextBiz(dt):'';
     installmentRows.push({num:'—',value:val||'',date:adj,holiday:adj&&isHol(adj),holidayName:adj&&isHol(adj)?holName(adj):'',obs:item.l,isVD:true});
+  });
+  customItems.forEach(ci=>{
+    if(ci.isento)return;
+    const val=ci.value; const dt=ci.date;
+    if(!val&&!dt)return;
+    const adj=dt?nextBiz(dt):'';
+    installmentRows.push({num:'—',value:val||'',date:adj,holiday:adj&&isHol(adj),holidayName:adj&&isHol(adj)?holName(adj):'',obs:ci.label||'Item adicional',isVD:true});
   });
   renderTable();
 }
@@ -805,6 +878,10 @@ function openPrint(){
     if(isoState[it.k]){valRows+=`<tr><td style="color:#8e8e93">${it.l}</td><td style="color:#8e8e93;font-style:italic">ISENTO</td><td>—</td></tr>`;}
     else{const v=document.getElementById('f-'+it.k).value||'';const d=fmtD(document.getElementById('fd-'+it.k).value);if(v||d)valRows+=`<tr><td>${it.l}</td><td style="font-family:monospace">${v||'—'}</td><td>${d||'—'}</td></tr>`;}
   });
+  customItems.forEach(ci=>{
+    if(ci.isento){valRows+=`<tr><td style="color:#8e8e93">${ci.label||'Item adicional'}</td><td style="color:#8e8e93;font-style:italic">ISENTO</td><td>—</td></tr>`;}
+    else{const d=fmtD(ci.date);if(ci.value||d)valRows+=`<tr><td>${ci.label||'Item adicional'}</td><td style="font-family:monospace">${ci.value||'—'}</td><td>${d||'—'}</td></tr>`;}
+  });
 
   const numbered=installmentRows.filter(r=>!r.isVD);
   const vds=installmentRows.filter(r=>r.isVD);
@@ -915,7 +992,7 @@ function clearForm(){
     document.getElementById('f-'+k).value='';
     document.getElementById('fd-'+k).value='';
   });
-  installmentRows=[];renderTable();
+  customItems=[];renderCustomItems();installmentRows=[];renderTable();
   selCo='';renderCo();
   selectType(document.querySelector('.type-btn.none'),'none');
   document.getElementById('total-geral').textContent='R$ 0,00';
