@@ -465,6 +465,11 @@ h1 { font-size: 28px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.
           <div class="total-chip-value green" id="total-parc">R$ 0,00</div>
         </div>
       </div>
+
+      <div class="form-row" style="margin-top:16px;">
+        <label class="form-label">Observações</label>
+        <textarea class="form-textarea" id="f-obs-parcelas" placeholder="Condições especiais, informações adicionais sobre as parcelas..."></textarea>
+      </div>
     </div>
   </div>
 
@@ -815,6 +820,7 @@ function openPrint(){
   const cpf=document.getElementById('f-cpf').value||'';
   const pix=document.getElementById('f-pix').value||'';
   const drec=document.getElementById('f-data-rec').value||'';
+  const obsParc=document.getElementById('f-obs-parcelas').value||'';
   const today=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
 
   document.getElementById('print-document').innerHTML=`
@@ -842,6 +848,7 @@ function openPrint(){
         <tbody>${instHTML}</tbody>
       </table>
       ${vdHTML}
+      ${obsParc?`<div style="margin-top:10px;padding:8px 10px;border:1px solid #e0e0e0;border-radius:4px;font-size:12px;"><strong style='font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:#6e6e73;'>Observações</strong><br>${obsParc}</div>`:''}
     </div>
     <div class="p-section">
       <div class="p-section-title">Dados para Depósito</div>
